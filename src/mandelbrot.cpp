@@ -29,5 +29,18 @@ int main(int argc, char** argv) {
         std::cerr << "Error: Invalid rectangle coordinates.\n";
         return 1;
     }
+
+    std::string out = argv[5];
+
+    long double x_range = rect.x_max - rect.x_min;
+    long double y_range = rect.y_max - rect.y_min;
     
+    HEIGHT = (int) std::llround(WIDTH * (y_range / x_range));
+    if(HEIGHT <= 0) {
+        std::cerr << "Error: Computed height is non-positive.\n";
+        return 1;
+    }
+
+    std::cout << "OK: " << WIDTH << " " << HEIGHT << "\n";
+    return 0;
 }
