@@ -1,5 +1,28 @@
 #include <bits/stdc++.h>
 
+static const int MAX_ITERATIONS = 1000;
+
+int mandelbrot_iterations(long double real, long double imag) {
+    long double z_real = 0.0;
+    long double z_imag = 0.0;
+    int iterations = 0;
+
+    while(z_real * z_real + z_imag * z_imag <= 4.0 && iterations < MAX_ITERATIONS) {
+        long double temp_real = z_real * z_real - z_imag * z_imag + real;
+        z_imag = 2.0 * z_real * z_imag + imag;
+        z_real = temp_real;
+        iterations++;
+    }
+    return iterations;
+}
+
+std::pair<long double, long double> pixel_to_xy(int px, int py, const struct Rectangle& rect) {
+    long double x = rect.x_min + (rect.x_max - rect.x_min) * px / (WIDTH - 1);
+    long double y = rect.y_min + (rect.y_max - rect.y_min) * py / (HEIGHT - 1);
+    return {x, y};
+}
+
+
 struct Rectangle { long double x_min, x_max, y_min, y_max; };
 
 static const int WIDTH = 1500;
