@@ -62,7 +62,7 @@ make e1.bmp
 
 	HEIGHT = round(WIDTH * (y_range / x_range)).
 
-- Iterations: `MAX_ITERATIONS` (default 1000) is used as the escape threshold. The iteration function returns the number of iterations before |z|^2 > 4 or `MAX_ITERATIONS` if the point appears to be in the set.
+- Iterations: `MAX_ITERATIONS` (default 100 because of homework instructions) is used as the escape threshold. The iteration function returns the number of iterations before |z|^2 > 4 or `MAX_ITERATIONS` if the point appears to be in the set.
 
 - Coloring: a function `mandelbrot_colorize(int it)` maps an iteration count to a simple RGB palette. Points inside the set (no escape) are colored black.
 
