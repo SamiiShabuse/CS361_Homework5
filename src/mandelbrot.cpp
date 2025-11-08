@@ -1,72 +1,46 @@
+/**
+ * @file src/mandelbrot.cpp
+ * 
+ * @brief Generates a Mandelbrot set image and saves it as a BMP file.
+ * 
+ * @author Samii Shabuse <sus24@drexel.edu>
+ * @date November 7, 2025
+ * 
+ * @section Overview
+ * 
+ * This file contains the main function to generate a Mandelbrot set image. It uses
+ * multithreading to speed up the rendering process and saves the output as a BMP file.
+ */
+
 #include <bits/stdc++.h>
 #include "multithread.cpp"
+#include "bitmap.h"
 
-#include <fstream>
-#include <string>
-#include <vector>
-#include <cstring>
-#include <iostream>
-
-bool write_bmp_24(const std::string& filename, int width, int height, const std::vector<uint8_t>& bgr){
-    // each row padded to multiple of 4 bytes
-    int row_stride = ((width * 3 + 3) / 4) * 4;
-    int img_size = row_stride * height;
-
-    // headers
-    uint8_t file_header[14] = {0};
-    uint8_t info_header[40] = {0};
-
-    // BITMAPFILEHEADER
-    file_header[0] = 'B'; file_header[1] = 'M';
-    uint32_t file_size = 14 + 40 + img_size;
-    memcpy(&file_header[2], &file_size, 4);
-    uint32_t pixel_offset = 14 + 40;
-    memcpy(&file_header[10], &pixel_offset, 4);
-
-    // BITMAPINFOHEADER
-    uint32_t hdr_size = 40;
-    memcpy(&info_header[0], &hdr_size, 4);
-    memcpy(&info_header[4], &width, 4);
-    memcpy(&info_header[8], &height, 4);
-    uint16_t planes = 1, bpp = 24;
-    memcpy(&info_header[12], &planes, 2);
-    memcpy(&info_header[14], &bpp, 2);
-    uint32_t compression = 0;
-    memcpy(&info_header[16], &compression, 4);
-    memcpy(&info_header[20], &img_size, 4);
-    // DPI to pixels-per-meter
-    int32_t ppm = 5906; // ~150 DPI
-    memcpy(&info_header[24], &ppm, 4);
-    memcpy(&info_header[28], &ppm, 4);
-    uint32_t clr_used = 0, clr_imp = 0;
-    memcpy(&info_header[32], &clr_used, 4);
-    memcpy(&info_header[36], &clr_imp, 4);
-
-    std::ofstream out(filename, std::ios::binary);
-    if(!out) return false;
-    out.write((char*)file_header, 14);
-    out.write((char*)info_header, 40);
-
-    // write bottom→top rows with padding
-    int src_row_bytes = width * 3;
-    std::vector<uint8_t> pad(row_stride - src_row_bytes, 0);
-
-    for(int y = 0; y < height; ++y){
-        int src_row = height - 1 - y; // BMP expects bottom row first
-        const uint8_t* row = &bgr[src_row * src_row_bytes];
-        out.write((const char*)row, src_row_bytes);
-        if(!pad.empty()) out.write((const char*)pad.data(), pad.size());
-    }
-    return true;
-}
-
+// Maximum iterations for Mandelbrot calculation
 static const int MAX_ITERATIONS = 1000;
 
+// Rectangle representing the area of the complex plane to render
 struct Rectangle { long double x_min, x_max, y_min, y_max; };
 
+// Image width
 static const int WIDTH = 1500;
+
+// Image height
 int HEIGHT; // This will be determined by the number of points on the y axis.
 
+/**
+ * @brief Computes the number of iterations for a point in the Mandelbrot set.
+ * 
+ * @param real The real part of the complex number.
+ * @param imag The imaginary part of the complex number.
+ * 
+ * @return int The number of iterations before escape (up to MAX_ITERATIONS).
+ * 
+ * @details The function iteratively applies the Mandelbrot formula:
+ *          z = z^2 + c, where c is the complex number represented by (real, imag).
+ *          The iteration continues until the magnitude of z exceeds 2 or the maximum
+ *          number of iterations is reached.
+ */
 int mandelbrot_iterations(long double real, long double imag) {
     long double z_real = 0.0;
     long double z_imag = 0.0;
@@ -81,12 +55,35 @@ int mandelbrot_iterations(long double real, long double imag) {
     return iterations;
 }
 
+/**
+ * @brief Maps pixel coordinates to complex plane coordinates.
+ * 
+ * @param px The x-coordinate of the pixel.
+ * @param py The y-coordinate of the pixel.
+ * @param width The width of the image in pixels.
+ * @param height The height of the image in pixels.
+ * @param rect The rectangle defining the area of the complex plane.
+ * 
+ * @return std::pair<long double, long double> The corresponding (x, y) coordinates in the complex plane.
+ */
 std::pair<long double, long double> pixel_to_xy(int px, int py, int width, int height, const Rectangle& rect) {
     long double x = rect.x_min + (rect.x_max - rect.x_min) * px / (long double)(width - 1);
     long double y = rect.y_min + (rect.y_max - rect.y_min) * py / (long double)(height - 1);
     return {x, y};
 }
 
+/**
+ * @brief Maps the number of iterations to a color.
+ * 
+ * @param it The number of iterations before escape.
+ * 
+ * @return std::array<uint8_t,3> The BGR color corresponding to the iteration count.
+ * 
+ * @details This function uses a simple coloring algorithm to map iteration counts
+ *          to colors. Points that do not escape (i.e., belong to the Mandelbrot set)
+ *          are colored black. Other points are colored based on their iteration count
+ *          using a gradient.
+ */
 static std::array<uint8_t,3> mandelbrot_colorize(int it){
     if(it >= MAX_ITERATIONS) return {0,0,0};
     // simple palette using a few bands
@@ -97,6 +94,21 @@ static std::array<uint8_t,3> mandelbrot_colorize(int it){
     return {b,g,r};
 }
 
+/**
+ * @brief Main function to generate the Mandelbrot set image.
+ * 
+ * @param argc Argument count.
+ * @param argv Argument vector.
+ * 
+ * @return int Exit status.
+ * 
+ * @details The program expects five command-line arguments:
+ *          1. x_min: Minimum x-coordinate of the rectangle.
+ *          2. x_max: Maximum x-coordinate of the rectangle.
+ *          3. y_min: Minimum y-coordinate of the rectangle.
+ *          4. y_max: Maximum y-coordinate of the rectangle.
+ *          5. out_file: Output BMP file name.
+ */
 int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);

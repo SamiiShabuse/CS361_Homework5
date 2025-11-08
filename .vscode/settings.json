@@ -3,6 +3,8 @@
         "iostream": "cpp",
         "fstream": "cpp",
         "array": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp"
     }
 }
