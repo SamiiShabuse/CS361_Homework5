@@ -5,6 +5,8 @@
         "array": "cpp",
         "vector": "cpp",
         "typeindex": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "bitset": "cpp",
+        "set": "cpp"
     }
 }

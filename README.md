@@ -49,7 +49,7 @@ Example (also provided as Makefile targets):
 ./bin/mandelbrot -0.5 0 0.3 1.2 e1.bmp
 ```
 
-Or use the Makefile convenience targets:
+Or use the Makefile targets:
 
 ```bash
 make e0.bmp

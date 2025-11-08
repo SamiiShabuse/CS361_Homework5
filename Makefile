@@ -15,7 +15,7 @@ e0.bmp: $(BIN)
 	./$(BIN) -2 1 -1.5 1.5 bin/e0.bmp
 
 e1.bmp: $(BIN)
-	./$(BIN) -0.5 0 0.3 1.2 e1.bmp
+	./$(BIN) -0.5 0 0.3 1.2 bin/e1.bmp
 
 e2.bmp: $(BIN)
 	./$(BIN) 0.3 0.4 0.6 0.7 bin/e2.bmp

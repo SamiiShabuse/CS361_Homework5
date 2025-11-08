@@ -16,8 +16,8 @@
 #include "multithread.cpp"
 #include "bitmap.h"
 
-// Maximum iterations for Mandelbrot calculation
-static const int MAX_ITERATIONS = 1000;
+// Maximum iterations for Mandelbrot calculation based on homework instructions
+static const int MAX_ITERATIONS = 100; 
 
 // Rectangle representing the area of the complex plane to render
 struct Rectangle { long double x_min, x_max, y_min, y_max; };
